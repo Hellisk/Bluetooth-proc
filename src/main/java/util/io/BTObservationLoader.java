@@ -5,6 +5,7 @@ import util.function.DistanceFunction;
 import util.object.*;
 
 import java.io.File;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -25,9 +26,12 @@ public class BTObservationLoader {
 	private long numOfIncludedPairs = 0;
 	private long numOfWrongOrderSequence = 0;
 	private long numOfUniqueStationVisit = 0;
-	private double totalTimeDiff = 0;
-	private long totalGaps = 0;
+	Map<String, Set<String>> loc2BTStation = new LinkedHashMap<>();
+	private double[] inclusionDurationDist = new double[20];    // distribution for duration of completed included observations, 10 second
+	// per cell
+	private double[] overlapDurationDist = new double[20];    // distribution for duration of overlapped observations, 10 second per cell
 	private int overlapStationCount = 0;
+	private double[] durationDist = new double[20];    // distribution for duration of overlapped observations, 10 second per cell
 	
 	/**
 	 * Load the original Bluetooth observations and generate the observation sequence for each device and the all Bluetooth station
@@ -37,8 +41,7 @@ public class BTObservationLoader {
 	 * @param distFunc      Distance function.
 	 * @return List of observation sequences, each of which belongs to a device, list of Bluetooth station information.
 	 */
-	public Pair<List<ObservationSequence>, List<BTStation>> loadRawObservations(List<File> inputFileList,
-																				DistanceFunction distFunc) {
+	public Pair<List<ObservationSequence>, List<BTStation>> loadRawObservations(List<File> inputFileList, DistanceFunction distFunc) {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Map<String, BTStation> id2BTStation = new LinkedHashMap<>();
 		Map<Long, List<BTObservation>> deviceID2ObList = new LinkedHashMap<>();
@@ -67,11 +70,13 @@ public class BTObservationLoader {
 				try {
 					enterDate = dateFormat.parse(info[1]);
 				} catch (ParseException e) {
-					LOG.error("The date information is not parsable: " + line);
+					LOG.error("Unable to parse date information: " + line);
 					continue;
 				}
 				BTObservation currOb = new BTObservation(Long.parseLong(info[0]), enterDate.getTime() / 1000, Long.parseLong(info[2]),
 						currStation, info[6]);
+				int durationIndex = (int) Math.floor(currOb.getDuration() / 10.0);
+				durationDist[durationIndex < durationDist.length ? durationIndex : durationDist.length - 1]++;
 				if (deviceID2ObList.containsKey(currOb.getDeviceID())) {
 					deviceID2ObList.get(currOb.getDeviceID()).add(currOb);
 				} else {
@@ -86,7 +91,6 @@ public class BTObservationLoader {
 		
 		List<ObservationSequence> obSequenceList = new ArrayList<>();
 		List<BTStation> btStationList = new ArrayList<>();
-		Map<String, Set<String>> loc2BTStation = new LinkedHashMap<>();
 		for (List<BTObservation> obList : deviceID2ObList.values()) {
 			Set<String> visitedBTStationSet = new HashSet<>();
 			Collections.sort(obList);
@@ -105,16 +109,26 @@ public class BTObservationLoader {
 							LOG.debug("The next observation is completely included in the last observation in sequence " +
 									currObSequence.getSequenceID() + "," + i + "," + nextObservation.getEnterTime() + "," +
 									nextObservation.getLeaveTime() + "," + currObservation.getEnterTime() + "," + currObservation.getLeaveTime());
+							LOG.debug("BT reader info: " + currObservation.getStation().getID() + "," + currObservation.getStation().getCentre().toString()
+									+ "," + nextObservation.getStation().getID() + "," + nextObservation.getStation().getCentre().toString()
+									+ "," + distFunc.distance(currObservation.getStation().getCentre(),
+									nextObservation.getStation().getCentre()));
+							int durationIndex = (int) Math.floor(nextObservation.getDuration() / 10.0);
+							inclusionDurationDist[durationIndex < inclusionDurationDist.length ? durationIndex : inclusionDurationDist.length - 1]++;
 							numOfIncludedPairs++;
 						} else {
 							LOG.debug("The next observation starts before the current observation in sequence " + currObSequence.getSequenceID()
 									+ "," + i + "," + currObservation.getLeaveTime() + "," + nextObservation.getEnterTime());
+							LOG.debug("BT reader info: " + currObservation.getStation().getID() + "," + currObservation.getStation().getCentre().toString()
+									+ "," + nextObservation.getStation().getID() + "," + nextObservation.getStation().getCentre().toString()
+									+ "," + distFunc.distance(currObservation.getStation().getCentre(),
+									nextObservation.getStation().getCentre()));
+							int durationIndex = (int) Math.floor(nextObservation.getDuration() / 10.0);
+							overlapDurationDist[durationIndex < overlapDurationDist.length ? durationIndex :
+									overlapDurationDist.length - 1]++;
 						}
 						numOfWrongOrderPairs++;
 						isWrongOrderedSequence = true;
-					} else {
-						totalTimeDiff += nextObservation.getEnterTime() - currObservation.getLeaveTime();
-						totalGaps++;
 					}
 				}
 			}
@@ -132,6 +146,7 @@ public class BTObservationLoader {
 			String location = station.getCentre().toString();
 			if (loc2BTStation.containsKey(location)) {
 				loc2BTStation.get(location).add(station.getID());
+				btStationList.add(station);
 			} else {
 				minLon = Math.min(station.getCentre().x(), minLon);
 				minLat = Math.min(station.getCentre().y(), minLat);
@@ -145,6 +160,10 @@ public class BTObservationLoader {
 		}
 		LOG.info("Current map region is :" + minLon + "," + maxLon + "," + minLat + "," + maxLat);
 		
+		return new Pair<>(obSequenceList, btStationList);
+	}
+	
+	public void printStatistics() {
 		for (Map.Entry<String, Set<String>> entry : loc2BTStation.entrySet()) {
 			if (entry.getValue().size() != 1) {    // multiple stations share the same location
 				StringBuilder idListString = new StringBuilder();
@@ -155,16 +174,31 @@ public class BTObservationLoader {
 				overlapStationCount += 1;
 			}
 		}
-		return new Pair<>(obSequenceList, btStationList);
-	}
-	
-	public void printStatistics() {
+		for (int i = 0; i < inclusionDurationDist.length; i++) {    // convert the count into percentage
+			durationDist[i] = durationDist[i] / obCount;
+			inclusionDurationDist[i] = inclusionDurationDist[i] / numOfIncludedPairs;
+			overlapDurationDist[i] = overlapDurationDist[i] / (numOfWrongOrderPairs - numOfIncludedPairs);
+		}
+		LOG.info("Total number of locations that have multiple stations assigned: " + overlapStationCount + ".");
 		LOG.info("Bluetooth record read finished. Total number of observations: " + obCount + ", sequences: " + sequenceCount + ", " +
 				"average observation per sequence: " + (obCount / sequenceCount) + ", number of unique station visit per sequence: " +
 				(numOfUniqueStationVisit / sequenceCount) + ".");
-		LOG.info("Average time gap between consecutive Bluetooth readers: " + totalTimeDiff / totalGaps);
 		LOG.info("Total number of incorrect time sequence: " + numOfWrongOrderSequence + ", incorrect pairs " + numOfWrongOrderPairs +
 				", " + "record that is completely contained by its preceding observation: " + numOfIncludedPairs);
-		LOG.info("Total number of locations that have multiple stations assigned: " + overlapStationCount + ".");
+		DecimalFormat decFor = new DecimalFormat("00.00");
+		StringBuilder durationString = new StringBuilder();
+		StringBuilder inclusionDurationString = new StringBuilder();
+		StringBuilder overlapDurationString = new StringBuilder();
+		for (int i = 0; i < durationDist.length; i++) {
+			durationString.append(decFor.format(durationDist[i] * 100)).append("%,");
+			inclusionDurationString.append(decFor.format(inclusionDurationDist[i] * 100)).append("%,");
+			overlapDurationString.append(decFor.format(overlapDurationDist[i] * 100)).append("%,");
+		}
+		durationString.deleteCharAt(durationString.length() - 1);
+		inclusionDurationString.deleteCharAt(inclusionDurationString.length() - 1);
+		overlapDurationString.deleteCharAt(overlapDurationString.length() - 1);
+		LOG.info("The duration distribution of raw data is: " + durationString.toString());
+		LOG.info("The duration distribution of fully included data is: " + inclusionDurationString.toString());
+		LOG.info("The duration distribution of partially overlapped data is: " + overlapDurationString.toString());
 	}
 }

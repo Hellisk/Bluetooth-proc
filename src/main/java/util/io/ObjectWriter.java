@@ -3,6 +3,8 @@ package util.io;
 import util.object.BTStation;
 import util.object.ObservationSequence;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,11 +25,19 @@ public class ObjectWriter {
 		IOService.writeFile(btStationStringList, outputFolder, "station.txt");
 	}
 	
-	public static void writeObservationSequence(List<ObservationSequence> obSequenceList, String outputFolder) {
+	public static void writeObSequenceListToFile(List<ObservationSequence> obSequenceList, String outputFolder, String fileName) {
 		IOService.createFolder(outputFolder);
-		IOService.cleanFolder(outputFolder);
-		for (ObservationSequence currObSequence : obSequenceList) {
-			IOService.writeFile(currObSequence.toString(), outputFolder, "Sequence_" + currObSequence.getSequenceID() + ".txt");
+		File file = new File(outputFolder, fileName);
+		if (file.exists())
+			if (!file.delete()) try {
+				throw new IOException("Failed to delete file: " + file.toString());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		List<String> obSequenceListContent = new ArrayList<>();
+		for (ObservationSequence observationSequence : obSequenceList) {
+			obSequenceListContent.add(observationSequence.toString());
 		}
+		IOService.writeFile(obSequenceListContent, outputFolder, fileName);
 	}
 }

@@ -26,8 +26,8 @@ public class RoadNetworkGraph implements Serializable {
 	 * Map boundaries
 	 */
 	private boolean hasBoundary = false;
-	private double minLat = Double.NEGATIVE_INFINITY, minLon = Double.NEGATIVE_INFINITY;
-	private double maxLat = Double.POSITIVE_INFINITY, maxLon = Double.POSITIVE_INFINITY;
+	private double minLat = Double.POSITIVE_INFINITY, minLon = Double.POSITIVE_INFINITY;
+	private double maxLat = Double.NEGATIVE_INFINITY, maxLon = Double.NEGATIVE_INFINITY;
 	
 	private boolean isDirectedMap = true;    // false when it stores an undirected map, all roads has its reverse road
 	
@@ -247,6 +247,7 @@ public class RoadNetworkGraph implements Serializable {
 	
 	private void updateBoundary(RoadNode node) {
 		// update the map boarder
+		this.hasBoundary = true;
 		if (this.maxLon < node.lon()) {
 			this.maxLon = node.lon();
 		}
@@ -259,7 +260,6 @@ public class RoadNetworkGraph implements Serializable {
 		if (this.minLat > node.lat()) {
 			this.minLat = node.lat();
 		}
-		this.hasBoundary = true;
 	}
 	
 	/**

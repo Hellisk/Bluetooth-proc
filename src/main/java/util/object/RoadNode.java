@@ -3,7 +3,6 @@ package util.object;
 import org.apache.log4j.Logger;
 import util.function.DistanceFunction;
 
-import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -164,8 +163,7 @@ public final class RoadNode extends RoadNetworkPrimitive {
 	
 	@Override
 	public String toString() {
-		DecimalFormat df = new DecimalFormat("0.00000");
-		StringBuilder output = new StringBuilder(getID() + " " + df.format(lon()) + " " + df.format(lat()));
+		StringBuilder output = new StringBuilder(getID() + " " + lon() + " " + lat());
 		if (!getTags().isEmpty()) {
 			for (Map.Entry<String, Object> entry : getTags().entrySet()) {
 				output.append(" ").append(entry.getKey()).append(":").append(entry.getValue());

@@ -1,6 +1,7 @@
 package util.object;
 
 import org.apache.log4j.Logger;
+import util.function.DistanceFunction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,22 +43,24 @@ public class ObservationSequence {
 		}
 	}
 	
-	public static ObservationSequence parseObSequence(List<String> info, long sequenceID, Map<String, BTStation> id2BTStation) {
-		if (info.size() != 2)
-			throw new IllegalArgumentException("Incorrect observation sequence element length: " + info.size());
-		String[] baseInfo = info.get(0).split(" ");
-		if (baseInfo.length != 3)
-			throw new IllegalArgumentException("Incorrect observation sequence base information: " + baseInfo.length);
-		String[] obInfo = info.get(1).split("\\|");
+	public static ObservationSequence parseObSequence(String info, Map<String, BTStation> id2BTStation) {
+		String[] obInfo = info.split("\\|");
+		if (obInfo.length < 2)
+			throw new IllegalArgumentException("Unable to parse observation sequence: " + info);
+		String[] basicInfo = obInfo[0].split(" ");
+		if (basicInfo.length != 4)
+			throw new IllegalArgumentException("Incorrect observation sequence basic information: " + basicInfo.length);
+		long sequenceID = Long.parseLong(basicInfo[0]);
 		List<BTObservation> obList = new ArrayList<>();
-		for (String s : obInfo) {
+		for (int i = 1; i < obInfo.length; i++) {    // the actual observations start from the second segment
+			String s = obInfo[i];
+			s = basicInfo[1] + " " + s;
 			obList.add(BTObservation.parseBTObservation(s, id2BTStation));
 		}
 		ObservationSequence currObSequence = new ObservationSequence(sequenceID, obList);
-		if (currObSequence.getDeviceID() != Long.parseLong(baseInfo[0]) || currObSequence.getStartTime() != Long.parseLong(baseInfo[1])
-				|| currObSequence.getEndTime() != Long.parseLong(baseInfo[2]))
+		if (currObSequence.getStartTime() != Long.parseLong(basicInfo[2]) || currObSequence.getEndTime() != Long.parseLong(basicInfo[3]))
 			throw new IllegalArgumentException("The constructed observation sequence has different information as provided: " +
-					currObSequence.getDeviceID() + " " + currObSequence.getStartTime() + " " + currObSequence.getEndTime() + "," + info.get(0));
+					currObSequence.getDeviceID() + " " + currObSequence.getStartTime() + " " + currObSequence.getEndTime() + "," + obInfo[0]);
 		return currObSequence;
 	}
 	
@@ -130,14 +133,36 @@ public class ObservationSequence {
 		return deviceID;
 	}
 	
+	/**
+	 * Each observation sequence is converted into one-line String. Format: sequenceID deviceID startTime
+	 * endTime|observation1|observation2...
+	 *
+	 * @return The String after being converted.
+	 */
 	@Override
 	public String toString() {
-		String firstLine = deviceID + " " + startTime + " " + endTime;
-		StringBuilder secondLine = new StringBuilder();
+		StringBuilder info = new StringBuilder();
+		if (observationList.size() == 0)
+			throw new IllegalArgumentException("The current observation sequence is empty: " + sequenceID);
+		info.append(sequenceID).append(" ").append(deviceID).append(" ").append(startTime).append(" ").append(endTime);
 		for (BTObservation currOb : observationList) {
-			secondLine.append(currOb.toString()).append("|");
+			String currObString = currOb.toString();    // remove device id as it is duplicated
+			currObString = currObString.substring(currObString.indexOf(' '));
+			info.append("|").append(currObString);
 		}
-		secondLine.substring(0, secondLine.length() - 1);
-		return firstLine + "\n" + secondLine.toString();
+		return info.toString();
+	}
+	
+	public double length() {
+		if (observationList.size() == 0)
+			return 0;
+		DistanceFunction distFunc = observationList.get(0).getDistFunc();
+		double distance = 0;
+		for (int i = 0; i < observationList.size() - 1; i++) {
+			BTObservation currOb = observationList.get(i);
+			BTObservation nextOb = observationList.get(i + 1);
+			distance += distFunc.distance(nextOb.getStation().getCentre(), currOb.getStation().getCentre());
+		}
+		return distance;
 	}
 }

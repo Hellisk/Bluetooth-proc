@@ -31,7 +31,7 @@ public class BTObservation implements Comparable<BTObservation> {
 			throw new IllegalArgumentException("Incorrect Bluetooth observation format: " + info);
 		if (!id2BTStation.containsKey(obInfo[3]))
 			throw new IllegalArgumentException("The Bluetooth reader is not found: " + obInfo[3]);
-		return new BTObservation(Long.parseLong(obInfo[0]), Long.parseLong(obInfo[1]), Long.parseLong(obInfo[2]),
+		return new BTObservation(Long.parseLong(obInfo[0]), Long.parseLong(obInfo[1]), Long.parseLong(obInfo[2]) - Long.parseLong(obInfo[1]),
 				id2BTStation.get(obInfo[3]), obInfo[4]);
 	}
 	
@@ -45,6 +45,10 @@ public class BTObservation implements Comparable<BTObservation> {
 	
 	public long getLeaveTime() {
 		return leaveTime;
+	}
+	
+	public long getDuration() {
+		return leaveTime - enterTime;
 	}
 	
 	public BTStation getStation() {

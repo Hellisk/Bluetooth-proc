@@ -97,45 +97,40 @@ public class RoadWay extends RoadNetworkPrimitive {
 	// TODO potential set new way problem
 	public static RoadWay parseRoadWay(String s, Map<String, RoadNode> index2Node, DistanceFunction df) {
 		String[] edgeInfo = s.split("\\|");
-		if (edgeInfo.length < 3 || edgeInfo.length > 4)
+		if (edgeInfo.length < 2 || edgeInfo.length > 3)
 			throw new IndexOutOfBoundsException("Failed to read road way: input data format is wrong. " + s);
 		RoadWay newWay = new RoadWay(edgeInfo[0], df);
 		List<RoadNode> miniNode = new ArrayList<>();
-		if (edgeInfo[0].equals("null")) {
+		
+		if (index2Node == null || index2Node.isEmpty()) {
+			LOG.warn("Node index is empty.");
+			// the read only happens in map road
 			String[] nodeInfo = edgeInfo[1].split(",");
-			// the current edge is fresh (not yet processed by map merge), the endpoints are not able to be matched to existing nodes
 			for (String info : nodeInfo) {
 				miniNode.add(RoadNode.parseRoadNode(info, df));
 			}
 		} else {
-			if (index2Node == null || index2Node.isEmpty()) {
-				// the read only happens in map road
-				String[] nodeInfo = edgeInfo[1].split(",");
-				for (String info : nodeInfo) {
-					miniNode.add(RoadNode.parseRoadNode(info, df));
+			// the end nodes are able to be found in node mapping
+			String[] nodeInfo = edgeInfo[1].split(",");
+			String firstNodeID = nodeInfo[0].split(" ")[0];
+			String lastNodeID = nodeInfo[nodeInfo.length - 1].split(" ")[0];
+			if (index2Node.containsKey(firstNodeID) && index2Node.containsKey(lastNodeID)) {
+				// the road way record is complete and the endpoints exist
+				miniNode.add(index2Node.get(firstNodeID));
+				for (int i = 1; i < nodeInfo.length - 1; i++) {
+					miniNode.add(RoadNode.parseRoadNode(nodeInfo[i], df));
 				}
+				miniNode.add(index2Node.get(lastNodeID));
 			} else {
-				// the end nodes are able to be found in node mapping
-				String[] nodeInfo = edgeInfo[1].split(",");
-				String firstNodeID = nodeInfo[0].split(" ")[0];
-				String lastNodeID = nodeInfo[nodeInfo.length - 1].split(" ")[0];
-				if (index2Node.containsKey(firstNodeID) && index2Node.containsKey(lastNodeID)) {
-					// the road way record is complete and the endpoints exist
-					miniNode.add(index2Node.get(firstNodeID));
-					for (int i = 1; i < nodeInfo.length - 1; i++) {
-						miniNode.add(RoadNode.parseRoadNode(nodeInfo[i], df));
-					}
-					miniNode.add(index2Node.get(lastNodeID));
-				} else {
-					// it happens during the extraction of map with boundary. Otherwise, it should be a mistake.
+				// it happens during the extraction of map with boundary. Otherwise, it should be a mistake.
 //					LOG.warn("The endpoints of the road way cannot be found in node list: " + newWay.getID());
-					return new RoadWay(df);
-				}
+				return new RoadWay(df);
 			}
 		}
-		if (edgeInfo.length == 4) {
+		
+		if (edgeInfo.length == 3) {
 			// attributes exists
-			String[] attributeList = edgeInfo[3].split("_");
+			String[] attributeList = edgeInfo[2].split("_");
 			for (String attribute : attributeList) {
 				String[] values = attribute.split(":");
 				if (values.length != 2)
@@ -290,7 +285,7 @@ public class RoadWay extends RoadNetworkPrimitive {
 	
 	/**
 	 * Convert the road way into string, for write purpose. The format is as follows:
-	 * ID|RoadNode1,RoadNode2...|isNewRoad|attribute1:value1_attribute2:value2
+	 * ID|RoadNode1,RoadNode2...|attribute1:value1_attribute2:value2
 	 *
 	 * @return String that contains all road way information
 	 */

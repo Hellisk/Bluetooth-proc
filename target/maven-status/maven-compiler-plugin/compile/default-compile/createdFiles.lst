@@ -1,6 +1,7 @@
 util\function\EuclideanDistanceFunction.class
 util\object\Rectangle.class
 util\object\ObservationSequence.class
+util\display\UnfoldingMapDisplay.class
 util\io\IOService.class
 util\io\OSMMapLoader.class
 Main.class
@@ -9,6 +10,7 @@ util\object\RoadNetworkGraph.class
 util\object\RoadNetworkPrimitive.class
 util\io\BTObservationLoader.class
 util\object\RoadNode.class
+preprocessing\ObservationPreprocess.class
 util\settings\MapServiceLogger.class
 util\object\Pair.class
 util\io\ObjectWriter.class
