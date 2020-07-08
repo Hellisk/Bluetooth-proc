@@ -1,6 +1,7 @@
 package util.io;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import util.settings.MapServiceLogger;
 
 import java.io.*;
@@ -16,7 +17,7 @@ import java.util.stream.Stream.Builder;
  */
 public final class IOService implements Serializable {
 	
-	private static Logger LOG = Logger.getLogger(MapServiceLogger.class);   // log entry
+	private static Logger LOG = LogManager.getLogger(MapServiceLogger.class);   // log entry
 	
 	/**
 	 * Create a file folder if it does not exist.

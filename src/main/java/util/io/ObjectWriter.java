@@ -1,7 +1,7 @@
 package util.io;
 
 import util.object.BTStation;
-import util.object.ObservationSequence;
+import util.object.OBSequence;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +25,7 @@ public class ObjectWriter {
 		IOService.writeFile(btStationStringList, outputFolder, "station.txt");
 	}
 	
-	public static void writeObSequenceListToFile(List<ObservationSequence> obSequenceList, String outputFolder, String fileName) {
+	public static void writeObSequenceListToFile(List<OBSequence> obSequenceList, String outputFolder, String fileName) {
 		IOService.createFolder(outputFolder);
 		File file = new File(outputFolder, fileName);
 		if (file.exists())
@@ -35,8 +35,8 @@ public class ObjectWriter {
 				e.printStackTrace();
 			}
 		List<String> obSequenceListContent = new ArrayList<>();
-		for (ObservationSequence observationSequence : obSequenceList) {
-			obSequenceListContent.add(observationSequence.toString());
+		for (OBSequence OBSequence : obSequenceList) {
+			obSequenceListContent.add(OBSequence.toString());
 		}
 		IOService.writeFile(obSequenceListContent, outputFolder, fileName);
 	}

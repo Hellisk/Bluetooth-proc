@@ -1,6 +1,7 @@
 package preprocessing;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import util.function.DistanceFunction;
 import util.io.BTObservationLoader;
 import util.io.IOService;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
  */
 public class ObservationPreprocess {
 	
-	private static final Logger LOG = Logger.getLogger(ObservationPreprocess.class);
+	private static final Logger LOG = LogManager.getLogger(ObservationPreprocess.class);
 	private int gapCount = 0;    // total number of gaps
 	private int obCount = 0;    // total observation count
 	private int sequenceCount = 0;    // total number of sequences after segmentation
@@ -27,12 +28,24 @@ public class ObservationPreprocess {
 	private double totalDuration = 0;    // total duration within each reader
 	private long maxDuration = 0;    // the maximum duration
 	private int longDurationObCount = 0;    // number of records whose duration is longer than 300s
-	private int[] durationDist = new int[20];    // distribution for duration, 10 second per cell
 	private int lowSpeedSequences = 0;    // average speed is less than 5km/h
 	
+	/**
+	 * Read the original observations from raw files and convert them into observation sequences, each sequence is regarded as a trip
+	 * from a particular user, which consists of a sequence of chronologically-ordered observations. The process includes the reading
+	 * of Bluetooth observations, the writing of unsegmented sequences (to raw folder) and segmented sequences (to input folder).
+	 *
+	 * @param rawBTObFolder         Input Bluetooth observation folder.
+	 * @param inputBTStationFolder  Input list of Bluetooth stations.
+	 * @param rawObSequenceFolder   Output unsegmented Bluetooth sequences.
+	 * @param inputObSequenceFolder Output segmented Bluetooth sequences.
+	 * @param boundaryExtension     The buffer size of the map boundary.
+	 * @param distFunc              Distance function.
+	 * @return The boundary of the map region.
+	 */
 	public Rectangle rawObservationLoader(String rawBTObFolder, String inputBTStationFolder, String rawObSequenceFolder,
 										  String inputObSequenceFolder, double boundaryExtension, DistanceFunction distFunc) {
-		int maxTimeGap = 1200;
+		int maxTimeGap = 1200;    // the maximum time gap (sec) between two observations within one trip, used for sequence segmentation
 		IOService.cleanFolder(rawObSequenceFolder);
 		IOService.cleanFolder(inputObSequenceFolder);
 		Map<String, BTStation> id2BTStation = new LinkedHashMap<>();
@@ -47,7 +60,7 @@ public class ObservationPreprocess {
 			if (filePath.isDirectory()) {    // the input folder is divided by multiple months, read each month separately
 				LOG.info("Processing " + (month + 1) + "/" + filepathList.length + " folder.");
 				inputFileList.addAll(IOService.getFiles(filePath.getAbsolutePath()).collect(Collectors.toList()));
-				Pair<List<ObservationSequence>, List<BTStation>> btObResults = btObservationLoader.loadRawObservations(inputFileList, distFunc);
+				Pair<List<OBSequence>, List<BTStation>> btObResults = btObservationLoader.loadRawObservations(inputFileList, distFunc);
 				for (BTStation btStation : btObResults._2()) {
 					if (id2BTStation.containsKey(btStation.getID())) {
 						if (!id2BTStation.get(btStation.getID()).getCentre().equals2D(btStation.getCentre()))
@@ -56,13 +69,13 @@ public class ObservationPreprocess {
 					} else
 						id2BTStation.put(btStation.getID(), btStation);
 				}
-				for (ObservationSequence currObSequence : btObResults._1()) {
+				for (OBSequence currObSequence : btObResults._1()) {
 					deviceIDSet.add(currObSequence.getDeviceID());
 				}
 				String fileName = "Sequence_" + filePath.getName().substring(filePath.getName().lastIndexOf('/') + 1) +
 						".txt";
 				ObjectWriter.writeObSequenceListToFile(btObResults._1(), rawObSequenceFolder, fileName);
-				List<ObservationSequence> segmentedObSeqList = obSequenceSegmentation(btObResults._1(), maxTimeGap, 0, distFunc);
+				List<OBSequence> segmentedObSeqList = obSequenceSegmentation(btObResults._1(), maxTimeGap, 0, distFunc);
 				ObjectWriter.writeObSequenceListToFile(segmentedObSeqList, inputObSequenceFolder, fileName);
 				sequenceCount += segmentedObSeqList.size();
 				inputFileList = new ArrayList<>();    // empty the current list
@@ -72,7 +85,7 @@ public class ObservationPreprocess {
 		}
 		
 		if (!inputFileList.isEmpty()) {    // the folder does not contains more sub-folders
-			Pair<List<ObservationSequence>, List<BTStation>> btObResults = btObservationLoader.loadRawObservations(inputFileList, distFunc);
+			Pair<List<OBSequence>, List<BTStation>> btObResults = btObservationLoader.loadRawObservations(inputFileList, distFunc);
 			for (BTStation btStation : btObResults._2()) {
 				if (id2BTStation.containsKey(btStation.getID())) {
 					if (!id2BTStation.get(btStation.getID()).getCentre().equals2D(btStation.getCentre()))
@@ -81,11 +94,11 @@ public class ObservationPreprocess {
 				} else
 					id2BTStation.put(btStation.getID(), btStation);
 			}
-			for (ObservationSequence currObSequence : btObResults._1()) {
+			for (OBSequence currObSequence : btObResults._1()) {
 				deviceIDSet.add(currObSequence.getDeviceID());
 			}
 			ObjectWriter.writeObSequenceListToFile(btObResults._1(), rawObSequenceFolder, "Sequence_all.txt");
-			List<ObservationSequence> segmentedObSeqList = obSequenceSegmentation(btObResults._1(), 1200, 0, distFunc);
+			List<OBSequence> segmentedObSeqList = obSequenceSegmentation(btObResults._1(), 1200, 0, distFunc);
 			ObjectWriter.writeObSequenceListToFile(segmentedObSeqList, inputObSequenceFolder, "Sequence_all.txt");
 			sequenceCount += segmentedObSeqList.size();
 		}
@@ -125,16 +138,16 @@ public class ObservationPreprocess {
 	
 	/**
 	 * Segment the observation sequences based on time and average speed. The current sequence is to be divided if its time gap exceed
-	 * the threshold or the average speed to the next location is less than 2km/h.
+	 * the threshold and the average speed to the next location is less than 15km/h.
 	 *
 	 * @param oriSequenceList Original observation sequences.
 	 * @param maxTimeGap      The maximum time gap between two consecutive sequences.
 	 * @return The segmented observation sequences.
 	 */
-	public List<ObservationSequence> obSequenceSegmentation(List<ObservationSequence> oriSequenceList, int maxTimeGap, int startID,
-															DistanceFunction distFunc) {
-		List<ObservationSequence> resultObSequenceList = new ArrayList<>();
-		for (ObservationSequence currObSeq : oriSequenceList) {
+	public List<OBSequence> obSequenceSegmentation(List<OBSequence> oriSequenceList, int maxTimeGap, int startID,
+												   DistanceFunction distFunc) {
+		List<OBSequence> resultObSequenceList = new ArrayList<>();
+		for (OBSequence currObSeq : oriSequenceList) {
 			List<BTObservation> currObList = new ArrayList<>();
 			currObList.add(currObSeq.getObservationList().get(0));
 			for (int i = 0; i < currObSeq.getObservationList().size() - 1; i++) {
@@ -159,7 +172,7 @@ public class ObservationPreprocess {
 //						System.out.println("TEST");
 					// cut the current sequence
 					if (currObList.size() > 1) {
-						ObservationSequence currSeq = new ObservationSequence(startID, currObList);
+						OBSequence currSeq = new OBSequence(startID, currObList);
 						if (currSeq.length() != 0) {
 							startID++;
 							resultObSequenceList.add(currSeq);
@@ -173,14 +186,14 @@ public class ObservationPreprocess {
 				}
 			}
 			if (currObList.size() > 1) {    // the end of the sequence
-				ObservationSequence currSeq = new ObservationSequence(startID, currObList);
+				OBSequence currSeq = new OBSequence(startID, currObList);
 				if (currSeq.length() != 0) {
 					startID++;
 					resultObSequenceList.add(currSeq);
 				}
 			}
 		}
-		for (ObservationSequence currObSeq : resultObSequenceList) {
+		for (OBSequence currObSeq : resultObSequenceList) {
 			double distance = 0;
 			obCount += currObSeq.size();
 			long duration = currObSeq.getObservationList().get(0).getLeaveTime() - currObSeq.getObservationList().get(0).getEnterTime();

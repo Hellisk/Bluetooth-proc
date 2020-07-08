@@ -52,7 +52,7 @@ public abstract class RoadNetworkPrimitive implements Cloneable, Serializable {
 	/**
 	 * @return The identifier of this road network primitive.
 	 */
-	public String getID() {
+	public String getId() {
 		if (id == null) {
 			return "";
 		}
@@ -104,6 +104,14 @@ public abstract class RoadNetworkPrimitive implements Cloneable, Serializable {
 			tags = new HashMap<>(1);
 		}
 		tags.put(key, value);
+	}
+	
+	/**
+	 * Clear all stored tags.
+	 */
+	public void clearTag() {
+		if (tags != null)
+			tags.clear();
 	}
 	
 	/**

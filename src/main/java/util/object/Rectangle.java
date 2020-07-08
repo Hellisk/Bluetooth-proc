@@ -1,6 +1,7 @@
 package util.object;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import util.function.DistanceFunction;
 
 import java.awt.geom.Rectangle2D;
@@ -17,7 +18,7 @@ import java.util.List;
  */
 public class Rectangle {
 	
-	private static final Logger LOG = Logger.getLogger(Rectangle.class);
+	private static final Logger LOG = LogManager.getLogger(Rectangle.class);
 	
 	// X and Y axis position
 	/**

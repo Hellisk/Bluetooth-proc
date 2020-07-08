@@ -1,6 +1,7 @@
 package util.object;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import util.function.DistanceFunction;
 
 import java.util.HashMap;
@@ -16,7 +17,7 @@ import java.util.Set;
  */
 public final class RoadNode extends RoadNetworkPrimitive {
 	
-	private static final Logger LOG = Logger.getLogger(RoadNode.class);
+	private static final Logger LOG = LogManager.getLogger(RoadNode.class);
 	
 	/**
 	 * Longitude coordinate (x)
@@ -157,13 +158,13 @@ public final class RoadNode extends RoadNetworkPrimitive {
 	 */
 	public Point toPoint() {
 		Point p = new Point(lon, lat, getDistanceFunction());
-		p.setId(getID());
+		p.setId(getId());
 		return p;
 	}
 	
 	@Override
 	public String toString() {
-		StringBuilder output = new StringBuilder(getID() + " " + lon() + " " + lat());
+		StringBuilder output = new StringBuilder(getId() + " " + lon() + " " + lat());
 		if (!getTags().isEmpty()) {
 			for (Map.Entry<String, Object> entry : getTags().entrySet()) {
 				output.append(" ").append(entry.getKey()).append(":").append(entry.getValue());
@@ -177,7 +178,7 @@ public final class RoadNode extends RoadNetworkPrimitive {
 	 */
 	@Override
 	public RoadNode clone() {
-		return new RoadNode(getID(), lon, lat, inComingWayList, outGoingWayList, getTags(), getDistanceFunction());
+		return new RoadNode(getId(), lon, lat, inComingWayList, outGoingWayList, getTags(), getDistanceFunction());
 	}
 	
 	@Override
@@ -227,11 +228,11 @@ public final class RoadNode extends RoadNetworkPrimitive {
 	}
 	
 	public void removeInComingWayFromList(RoadWay way) {
-		this.inComingWayList.removeIf(w -> w.getID().equals(way.getID()));
+		this.inComingWayList.removeIf(w -> w.getId().equals(way.getId()));
 	}
 	
 	public void removeOutGoingWayFromList(RoadWay way) {
-		this.outGoingWayList.removeIf(w -> w.getID().equals(way.getID()));
+		this.outGoingWayList.removeIf(w -> w.getId().equals(way.getId()));
 	}
 	
 	public int getInComingDegree() {

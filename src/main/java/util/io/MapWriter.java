@@ -1,6 +1,7 @@
 package util.io;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import util.object.RoadNetworkGraph;
 import util.object.RoadNode;
 import util.object.RoadWay;
@@ -19,7 +20,7 @@ import java.util.List;
  */
 public class MapWriter {
 	
-	private static final Logger LOG = Logger.getLogger(MapWriter.class);
+	private static final Logger LOG = LogManager.getLogger(MapWriter.class);
 	
 	/**
 	 * Write a road network to files
@@ -72,7 +73,7 @@ public class MapWriter {
 		List<String> fileLines = new ArrayList<>(wayList.size());
 		for (RoadWay n : wayList) {
 			if (n.getFromNode().toPoint().equals2D(n.getToNode().toPoint())) {
-				LOG.warn("Road " + n.getID() + " has the same start and end points.");
+				LOG.warn("Road " + n.getId() + " has the same start and end points.");
 				continue;
 			}
 			fileLines.add(n.toString());

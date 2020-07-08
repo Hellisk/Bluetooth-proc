@@ -4473,10 +4473,10 @@ Event: 171.786 Thread 0x000001ef54037000 6978       4       java.util.ArrayList:
 Event: 171.789 Thread 0x000001ef54037000 nmethod 6978 0x000001ef0fd72090 code [0x000001ef0fd72240, 0x000001ef0fd72478]
 Event: 171.789 Thread 0x000001ef54037000 6973       4       java.util.ArrayList$SubList::toArray (79 bytes)
 Event: 171.792 Thread 0x000001ef54037000 nmethod 6973 0x000001ef0fd71a10 code [0x000001ef0fd71bc0, 0x000001ef0fd71ef8]
-Event: 171.884 Thread 0x000001ef5403a800 6984       3       util.object.ObservationSequence::<init> (106 bytes)
+Event: 171.884 Thread 0x000001ef5403a800 6984       3       util.object.OBSequence::<init> (106 bytes)
 Event: 171.885 Thread 0x000001ef5403a800 nmethod 6984 0x000001ef087fd190 code [0x000001ef087fd3c0, 0x000001ef087fddf0]
 Event: 171.979 Thread 0x000001ef5c4ed800 nmethod 6979% 0x000001ef0fef1310 code [0x000001ef0fef1700, 0x000001ef0fefc150]
-Event: 171.980 Thread 0x000001ef54037000 6985       4       util.object.ObservationSequence::parseObSequence (202 bytes)
+Event: 171.980 Thread 0x000001ef54037000 6985       4       util.object.OBSequence::parseObSequence (202 bytes)
 Event: 172.119 Thread 0x000001ef54037000 nmethod 6985 0x000001ef0ff4f390 code [0x000001ef0ff4f680, 0x000001ef0ff54008]
 
 GC Heap History (10 events):

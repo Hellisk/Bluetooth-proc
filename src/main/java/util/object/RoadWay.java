@@ -1,6 +1,7 @@
 package util.object;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import util.function.DistanceFunction;
 import util.function.SpatialUtils;
 
@@ -16,7 +17,7 @@ import java.util.Map;
  */
 public class RoadWay extends RoadNetworkPrimitive {
 	
-	private static final Logger LOG = Logger.getLogger(RoadWay.class);
+	private static final Logger LOG = LogManager.getLogger(RoadWay.class);
 	
 	/**
 	 * The list of nodes in this road way
@@ -261,7 +262,7 @@ public class RoadWay extends RoadNetworkPrimitive {
 			node1 = nodeList.get(i);
 			node2 = nodeList.get(i + 1);
 			Segment currSegment = new Segment(node1.lon(), node1.lat(), node2.lon(), node2.lat(), getDistanceFunction());
-			currSegment.setId(this.getID());
+			currSegment.setId(this.getId());
 			sList.add(currSegment);
 		}
 		return sList;
@@ -291,7 +292,7 @@ public class RoadWay extends RoadNetworkPrimitive {
 	 */
 	@Override
 	public String toString() {
-		StringBuilder s = new StringBuilder(this.getID() + "|");
+		StringBuilder s = new StringBuilder(this.getId() + "|");
 		for (RoadNode n : this.getNodes()) {
 			s.append(",").append(n.toString());
 		}
@@ -320,7 +321,7 @@ public class RoadWay extends RoadNetworkPrimitive {
 		if (!(obj instanceof RoadWay))
 			return false;
 		RoadWay other = (RoadWay) obj;
-		return this.size() == other.size() && this.getID().equals(other.getID());
+		return this.size() == other.size() && this.getId().equals(other.getId());
 	}
 	
 	public double getLength() {
@@ -435,7 +436,7 @@ public class RoadWay extends RoadNetworkPrimitive {
 	 */
 	public List<RoadWay> splitAtNode(RoadNode intersectionNode, Segment edge) {
 		List<RoadNode> startMiniNodeList = new ArrayList<>();
-		String id = this.getID();
+		String id = this.getId();
 		int splitIndex = 0;
 		if (edge != null) {
 			while (!this.getNode(splitIndex).toPoint().equals2D(edge.p1()) && splitIndex < this.size() - 1) {

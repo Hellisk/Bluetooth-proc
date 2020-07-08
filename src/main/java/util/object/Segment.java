@@ -1,6 +1,7 @@
 package util.object;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import util.function.DistanceFunction;
 
 import java.util.ArrayList;
@@ -16,7 +17,7 @@ import java.util.List;
  */
 public class Segment {
 	
-	private static final Logger LOG = Logger.getLogger(Segment.class);
+	private static final Logger LOG = LogManager.getLogger(Segment.class);
 	/**
 	 * Start-point coordinates
 	 */

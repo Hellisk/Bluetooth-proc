@@ -1,6 +1,7 @@
 package util.object;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import util.function.DistanceFunction;
 
 import java.awt.geom.Point2D;
@@ -17,7 +18,7 @@ import java.util.List;
  */
 public class Point {
 	
-	private static final Logger LOG = Logger.getLogger(Point.class);
+	private static final Logger LOG = LogManager.getLogger(Point.class);
 	
 	private String id;
 	/**

@@ -1,6 +1,5 @@
 util\function\EuclideanDistanceFunction.class
 util\object\Rectangle.class
-util\object\ObservationSequence.class
 util\display\UnfoldingMapDisplay.class
 util\io\IOService.class
 util\io\OSMMapLoader.class
@@ -22,5 +21,6 @@ util\object\BTObservation.class
 util\object\RoadWay.class
 util\function\SpatialUtils.class
 util\object\Segment.class
+util\object\OBSequence.class
 util\io\MapReader.class
 util\io\ObjectReader.class

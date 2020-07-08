@@ -1,6 +1,7 @@
 package util.object;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import util.function.DistanceFunction;
 
 import java.util.ArrayList;
@@ -13,9 +14,9 @@ import java.util.Map;
  * @author Hellisk
  * Created 6/09/2019
  */
-public class ObservationSequence {
+public class OBSequence {
 	
-	private static final Logger LOG = Logger.getLogger(ObservationSequence.class);
+	private static final Logger LOG = LogManager.getLogger(OBSequence.class);
 	
 	private long sequenceID;
 	private long deviceID;
@@ -29,7 +30,7 @@ public class ObservationSequence {
 	 * @param sequenceID   The id of the sequence.
 	 * @param observations The sorted list of observations.
 	 */
-	public ObservationSequence(long sequenceID, List<BTObservation> observations) {
+	public OBSequence(long sequenceID, List<BTObservation> observations) {
 		this.sequenceID = sequenceID;
 		this.observationList = observations;
 		if (observations.size() != 0) {
@@ -43,7 +44,7 @@ public class ObservationSequence {
 		}
 	}
 	
-	public static ObservationSequence parseObSequence(String info, Map<String, BTStation> id2BTStation) {
+	public static OBSequence parseObSequence(String info, Map<String, BTStation> id2BTStation) {
 		String[] obInfo = info.split("\\|");
 		if (obInfo.length < 2)
 			throw new IllegalArgumentException("Unable to parse observation sequence: " + info);
@@ -57,7 +58,7 @@ public class ObservationSequence {
 			s = basicInfo[1] + " " + s;
 			obList.add(BTObservation.parseBTObservation(s, id2BTStation));
 		}
-		ObservationSequence currObSequence = new ObservationSequence(sequenceID, obList);
+		OBSequence currObSequence = new OBSequence(sequenceID, obList);
 		if (currObSequence.getStartTime() != Long.parseLong(basicInfo[2]) || currObSequence.getEndTime() != Long.parseLong(basicInfo[3]))
 			throw new IllegalArgumentException("The constructed observation sequence has different information as provided: " +
 					currObSequence.getDeviceID() + " " + currObSequence.getStartTime() + " " + currObSequence.getEndTime() + "," + obInfo[0]);

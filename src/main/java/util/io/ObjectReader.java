@@ -1,8 +1,9 @@
 package util.io;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import util.object.BTStation;
-import util.object.ObservationSequence;
+import util.object.OBSequence;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
  */
 public class ObjectReader {
 	
-	private static final Logger LOG = Logger.getLogger(ObjectReader.class);
+	private static final Logger LOG = LogManager.getLogger(ObjectReader.class);
 	
 	public static List<BTStation> readBTStationList(String inputFilePath) {
 		List<String> stationInfoList = IOService.readFile(inputFilePath);
@@ -30,7 +31,7 @@ public class ObjectReader {
 		return resultStationList;
 	}
 	
-	public static List<ObservationSequence> readObservationSequenceList(String observationFolder, String stationFolder) {
+	public static List<OBSequence> readObservationSequenceList(String observationFolder, String stationFolder) {
 		List<BTStation> stationList = readBTStationList(stationFolder + "Station.txt");
 		Map<String, BTStation> id2BTStation = new HashMap<>();
 		for (BTStation currStation : stationList) {
@@ -39,7 +40,7 @@ public class ObjectReader {
 			else
 				throw new IllegalArgumentException("The same station appears multiple times in station list: " + currStation.getID());
 		}
-		List<ObservationSequence> resultObSequenceList = new ArrayList<>();
+		List<OBSequence> resultObSequenceList = new ArrayList<>();
 		List<File> inputFileList = IOService.getFiles(observationFolder).collect(Collectors.toList());
 		for (File file : inputFileList) {
 			resultObSequenceList.addAll(readObservationSequenceList(file, id2BTStation));
@@ -48,11 +49,11 @@ public class ObjectReader {
 		return resultObSequenceList;
 	}
 	
-	private static List<ObservationSequence> readObservationSequenceList(File obSequenceFile, Map<String, BTStation> id2BTStation) {
+	private static List<OBSequence> readObservationSequenceList(File obSequenceFile, Map<String, BTStation> id2BTStation) {
 		List<String> infoList = IOService.readFile(obSequenceFile);
-		List<ObservationSequence> obSequenceList = new ArrayList<>();
+		List<OBSequence> obSequenceList = new ArrayList<>();
 		for (String s : infoList) {
-			obSequenceList.add(ObservationSequence.parseObSequence(s, id2BTStation));
+			obSequenceList.add(OBSequence.parseObSequence(s, id2BTStation));
 		}
 		return obSequenceList;
 	}

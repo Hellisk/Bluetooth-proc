@@ -1,6 +1,7 @@
 package util.io;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import util.function.DistanceFunction;
 import util.object.*;
 
@@ -19,7 +20,7 @@ import java.util.*;
  */
 public class BTObservationLoader {
 	
-	private static final Logger LOG = Logger.getLogger(BTObservation.class);
+	private static final Logger LOG = LogManager.getLogger(BTObservation.class);
 	private long sequenceCount = 0;
 	private long obCount = 0;
 	private long numOfWrongOrderPairs = 0;
@@ -41,7 +42,7 @@ public class BTObservationLoader {
 	 * @param distFunc      Distance function.
 	 * @return List of observation sequences, each of which belongs to a device, list of Bluetooth station information.
 	 */
-	public Pair<List<ObservationSequence>, List<BTStation>> loadRawObservations(List<File> inputFileList, DistanceFunction distFunc) {
+	public Pair<List<OBSequence>, List<BTStation>> loadRawObservations(List<File> inputFileList, DistanceFunction distFunc) {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Map<String, BTStation> id2BTStation = new LinkedHashMap<>();
 		Map<Long, List<BTObservation>> deviceID2ObList = new LinkedHashMap<>();
@@ -89,7 +90,7 @@ public class BTObservationLoader {
 			LOG.info("Processed the " + fileCount + "/" + inputFileList.size() + " file.");
 		}
 		
-		List<ObservationSequence> obSequenceList = new ArrayList<>();
+		List<OBSequence> obSequenceList = new ArrayList<>();
 		List<BTStation> btStationList = new ArrayList<>();
 		for (List<BTObservation> obList : deviceID2ObList.values()) {
 			Set<String> visitedBTStationSet = new HashSet<>();
@@ -97,7 +98,7 @@ public class BTObservationLoader {
 			for (BTObservation ob : obList) {
 				visitedBTStationSet.add(ob.getStation().getID());
 			}
-			ObservationSequence currObSequence = new ObservationSequence(sequenceCount, obList);
+			OBSequence currObSequence = new OBSequence(sequenceCount, obList);
 			obSequenceList.add(currObSequence);
 			boolean isWrongOrderedSequence = false;
 			if (currObSequence.size() > 1) {

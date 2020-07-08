@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig authType="PASSWORD" host="dianella.eait.uq.edu.au" id="eb9d39fb-8e2d-4eff-9981-4a57fdd4f9c4" port="22" customName="Dianella" nameFormat="CUSTOM" username="uqpchao" />
+      <sshConfig authType="PASSWORD" host="dianella.eait.uq.edu.au" id="2b5739b2-402e-4497-a115-d15e84195c01" port="22" customName="Dianella" nameFormat="CUSTOM" username="uqpchao" />
+    </configs>
+  </component>
+</project>

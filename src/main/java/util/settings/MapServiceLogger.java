@@ -1,10 +1,8 @@
 package util.settings;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import util.io.IOService;
-
-import java.io.InputStream;
 
 /**
  * Log entry for simple file logs using log4j package
@@ -24,10 +22,7 @@ public class MapServiceLogger {
 		System.setProperty("logfile.name", logPath + fileName + ".log");
 		// create the log folder if not exist, set the log file name
 		IOService.createFolder(logPath);
-		// read the log settings from property file
-		InputStream in = MapServiceLogger.class.getClassLoader().getResourceAsStream("log4j.properties");
-		PropertyConfigurator.configure(in); // refresh the log file path property
-		final Logger LOG = Logger.getLogger(MapServiceLogger.class);   // log entry
+		final Logger LOG = LogManager.getLogger(MapServiceLogger.class);   // log entry
 		LOG.debug("Log initialization done.");
 	}
 }

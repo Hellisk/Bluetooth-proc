@@ -55,10 +55,10 @@ public class UnfoldingMapDisplay extends PApplet {
 		RoadNetworkGraph rawMap = MapReader.readMap(inputMapFolder + "Brisbane.txt", distFunc);
 		Map<String, RoadWay> id2WayMap = new HashMap<>();
 		for (RoadWay way : rawMap.getWays()) {
-			if (!id2WayMap.containsKey(way.getID())) {
-				id2WayMap.put(way.getID(), way);
+			if (!id2WayMap.containsKey(way.getId())) {
+				id2WayMap.put(way.getId(), way);
 			} else
-				throw new IllegalArgumentException("Two roads has the same id:" + way.getID());
+				throw new IllegalArgumentException("Two roads has the same id:" + way.getId());
 		}
 //		List<Marker> mapMarker = roadWayMarkerGen(rawMap.getWays(), grey, 2);
 //		fullMapDisplay.addMarkers(mapMarker);
@@ -107,9 +107,9 @@ public class UnfoldingMapDisplay extends PApplet {
 		return currPointMarker;
 	}
 	
-	private List<Marker> obSequenceMarkerGen(List<ObservationSequence> w, int[] color, int strokeWeight) {
+	private List<Marker> obSequenceMarkerGen(List<OBSequence> w, int[] color, int strokeWeight) {
 		List<Marker> result = new ArrayList<>();
-		for (ObservationSequence currObSequence : w) {
+		for (OBSequence currObSequence : w) {
 			List<Location> locationList = new ArrayList<>();
 			for (BTObservation currOb : currObSequence.getObservationList()) {
 //				Pair<Double, Double> currPoint = SpatialUtils.convertGCJ2WGS(currOb.lon(), currOb.lat());        // for map provider other than Google

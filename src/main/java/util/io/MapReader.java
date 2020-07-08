@@ -1,6 +1,7 @@
 package util.io;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import util.function.DistanceFunction;
 import util.object.RoadNetworkGraph;
 import util.object.RoadNode;
@@ -19,7 +20,7 @@ import java.util.Map;
  */
 public class MapReader {
 	
-	private static final Logger LOG = Logger.getLogger(MapReader.class);
+	private static final Logger LOG = LogManager.getLogger(MapReader.class);
 	
 	/**
 	 * Read and parse the map files, including the both the vertices and edges. The given file name does not have the prefix
@@ -38,7 +39,7 @@ public class MapReader {
 		List<RoadNode> nodelist = readNodes(folderPath + "vertices_" + fileName, df);
 		roadGraph.setNodes(nodelist);
 		for (RoadNode node : nodelist) {
-			index2Node.put(node.getID(), node);
+			index2Node.put(node.getId(), node);
 		}
 		
 		// read road ways
@@ -75,7 +76,7 @@ public class MapReader {
 		nodelist.removeIf(x -> !roadGraph.getBoundary().contains(x.lon(), x.lat()));
 		roadGraph.setNodes(nodelist);
 		for (RoadNode node : nodelist) {
-			index2Node.put(node.getID(), node);
+			index2Node.put(node.getId(), node);
 		}
 		
 		// read road ways
